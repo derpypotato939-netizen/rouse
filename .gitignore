@@ -1,0 +1,20 @@
+.DS_Store
+*.xcuserstate
+xcuserdata/
+DerivedData/
+.build/
+.swiftpm/
+
+# Rendered audio — regenerate with `swift run rouse-render`
+out/
+*.wav
+*.caf
+
+node_modules/
+.next/
+.env*.local
+tsconfig.tsbuildinfo
+
+# Local sign-up and session data. Contains real email addresses — never commit this.
+# In production these rows go to Google Sheets instead (see web/README.md).
+.data/
