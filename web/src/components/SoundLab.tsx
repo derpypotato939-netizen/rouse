@@ -46,6 +46,8 @@ export default function SoundLab() {
   const [joinState, setJoinState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [joinError, setJoinError] = useState("");
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
+  /** Honeypot. Real users never see this field, so a non-empty value means a bot filled the form. */
+  const [website, setWebsite] = useState("");
   /** Kit uses double opt-in, so "submitted" and "subscribed" are not the same thing. */
   const [needsConfirmation, setNeedsConfirmation] = useState(true);
 
@@ -186,6 +188,8 @@ export default function SoundLab() {
             sounds: statsRef.current.sounds,
             downloads: statsRef.current.downloads,
             source: "sound-lab",
+            website,
+            elapsedMs: Date.now() - (startedAtRef.current ?? Date.now()),
           }),
         });
         const body = await res.json().catch(() => ({}));
@@ -198,7 +202,7 @@ export default function SoundLab() {
         setJoinState("error");
       }
     },
-    [email]
+    [email, website]
   );
 
   return (
@@ -320,6 +324,21 @@ export default function SoundLab() {
               sharing, unsubscribe whenever.
             </p>
             <form onSubmit={join} className="mt-4 flex flex-col gap-3 sm:flex-row">
+              {/*
+                Honeypot. Hidden from people and from screen readers (aria-hidden + tabIndex -1) but
+                present in the DOM, so an automated form-filler populates it and gives itself away.
+                Deliberately named "website" — bots look for familiar field names.
+              */}
+              <input
+                type="text"
+                name="website"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }}
+              />
               <input
                 type="email"
                 required

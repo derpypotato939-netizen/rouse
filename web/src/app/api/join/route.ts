@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { clientKey, screen } from "@/lib/abuse";
 
 /**
  * Waitlist capture → Kit (formerly ConvertKit).
@@ -32,6 +33,10 @@ type Signup = {
   sounds?: number;
   downloads?: number;
   source?: string;
+  /** Hidden field real users never fill. See lib/abuse.ts. */
+  website?: string;
+  /** Milliseconds between page load and submit. */
+  elapsedMs?: number;
 };
 
 function isDev() {
@@ -107,6 +112,27 @@ export async function POST(request: Request) {
   const email = body.email?.trim().toLowerCase();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Please enter a valid email." }, { status: 400 });
+  }
+
+  // Abuse screening happens before Kit is called, so a rejected request never causes an outbound
+  // email. That ordering is the whole point — see lib/abuse.ts for the threat model.
+  const verdict = screen({
+    key: clientKey(request),
+    honeypot: body.website,
+    elapsedMs: body.elapsedMs,
+    sounds: body.sounds,
+  });
+  if (!verdict.ok) {
+    console.warn("[join] rejected", { reason: verdict.reason });
+    // Silent rejections mimic success exactly. Telling a bot which check caught it just teaches the
+    // next version of the script to skip that check.
+    if (verdict.silent) {
+      return NextResponse.json({ ok: true, confirmationRequired: true });
+    }
+    return NextResponse.json(
+      { error: "That's a few too many sign-ups from here. Try again a little later." },
+      { status: 429 }
+    );
   }
 
   const record = {

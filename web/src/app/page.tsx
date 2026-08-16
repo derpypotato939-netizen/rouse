@@ -76,7 +76,19 @@ export default function Home() {
             condition. If you are persistently unable to wake or stay awake, that is worth raising
             with a doctor.
           </p>
-          <p className="mt-4">Built by Jasper.</p>
+          <p className="mt-4">
+            Built by Jasper ·{" "}
+            <a href="/privacy" className="underline underline-offset-4 hover:text-[var(--accent)]">
+              Privacy
+            </a>{" "}
+            ·{" "}
+            <a
+              href="https://github.com/derpypotato939-netizen/rouse/blob/main/docs/SCIENCE.md"
+              className="underline underline-offset-4 hover:text-[var(--accent)]"
+            >
+              Claims ledger
+            </a>
+          </p>
         </footer>
       </div>
     </main>
