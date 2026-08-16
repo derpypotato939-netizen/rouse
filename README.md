@@ -81,3 +81,26 @@ Validate the tuning constants without Xcode:
 ```bash
 node tools/validate.mjs
 ```
+
+Verify share links still reproduce the exact sound they name:
+
+```bash
+node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tools/verify-share.mjs
+```
+
+Batch-render sounds for content (no Xcode needed):
+
+```bash
+node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tools/render-sounds.mjs --count 30 --out ./out
+```
+
+## Where things are
+
+| | |
+|---|---|
+| [`docs/DEPLOY.md`](docs/DEPLOY.md) | The six steps to get this live. Start here. |
+| [`docs/OPERATIONS.md`](docs/OPERATIONS.md) | What costs money, and when to start paying it |
+| [`docs/SCIENCE.md`](docs/SCIENCE.md) | Claims ledger — every public claim, sourced |
+| [`docs/TOOLCHAIN.md`](docs/TOOLCHAIN.md) | Why Swift doesn't compile here yet |
+| [`content/lane-a-scripts.md`](content/lane-a-scripts.md) | First ten content scripts |
+| [`content/advocate-brief.md`](content/advocate-brief.md) | Send to anyone posting about Rouse |
