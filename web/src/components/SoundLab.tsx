@@ -56,6 +56,8 @@ export default function SoundLab() {
   const [website, setWebsite] = useState("");
   /** Kit uses double opt-in, so "submitted" and "subscribed" are not the same thing. */
   const [needsConfirmation, setNeedsConfirmation] = useState(true);
+  /** True when this sound arrived via a shared link rather than the visitor pressing generate. */
+  const [fromLink, setFromLink] = useState(false);
 
   const historyRef = useRef<Genome[]>([]);
   const contextRef = useRef<AudioContext | null>(null);
@@ -167,6 +169,7 @@ export default function SoundLab() {
   );
 
   const generate = useCallback(() => {
+    setFromLink(false);
     const nth = historyRef.current.length + 1;
     generateFrom(seedHash(`lab|${startedAtRef.current ?? 0}|${nth}|${Math.random()}`));
   }, [generateFrom]);
@@ -185,7 +188,10 @@ export default function SoundLab() {
     // synchronously inside an effect triggers a cascading render. Restoring a shared sound is
     // asynchronous work anyway — it renders 29 seconds of audio — so a task boundary is honest here,
     // not a workaround.
-    const task = setTimeout(() => generateFrom(seed, false), 0);
+    const task = setTimeout(() => {
+      setFromLink(true);
+      generateFrom(seed, false);
+    }, 0);
     return () => clearTimeout(task);
   }, [generateFrom]);
 
@@ -281,6 +287,13 @@ export default function SoundLab() {
               </div>
             </div>
 
+            {fromLink && (
+              <p className="mt-4 rounded-lg border border-[var(--cool)]/30 bg-[var(--cool)]/5 px-4 py-3 text-sm text-[var(--cool)]">
+                Someone shared this sound with you. It has only ever existed for them — press play,
+                then make one of your own.
+              </p>
+            )}
+
             <Waveform bins={sound.bins} playing={playing} />
 
             <div className="mt-5 flex flex-wrap gap-3">
@@ -288,7 +301,7 @@ export default function SoundLab() {
                 onClick={() => (playing ? stop() : play(sound, fromStart ? 0 : SKIP_RAMP_TO))}
                 className="rounded-full border border-[var(--border)] px-5 py-2.5 text-sm transition hover:border-[var(--accent)] hover:text-[var(--accent-soft)]"
               >
-                {playing ? "■ Stop" : "▶ Play again"}
+                {playing ? "■ Stop" : fromLink ? "▶ Play it" : "▶ Play again"}
               </button>
               <button
                 onClick={generate}
