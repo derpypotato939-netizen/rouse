@@ -390,8 +390,47 @@ export function sampleGenome(
   return { genome: safe, nearestDistance: nearest, usedFallback: true, attempts };
 }
 
-/** The public number printed on the share card. */
+/**
+ * The friendly number printed on the card. Deliberately lossy — five digits are memorable, and
+ * memorability is the whole job. It is a *label*, not an identifier.
+ */
 export function serialFor(seed: bigint): number {
+  return Number(seed % 100000n);
+}
+
+/**
+ * The identifier that actually reproduces a sound, for share links.
+ *
+ * The serial cannot do this job: `seed % 100000` throws away almost all of the seed, so it names a
+ * sound without being able to rebuild it. A share link carrying only the serial would land the
+ * recipient on a generic page — the sound they were sent would be gone. Base36 keeps the full seed
+ * short enough to sit in a URL.
+ */
+export function seedToToken(seed: bigint): string {
+  return seed.toString(36);
+}
+
+export function tokenToSeed(token: string): bigint | null {
+  // Bound the length: 13 base36 digits covers the full 64-bit space, and anything longer is
+  // someone poking at the URL rather than a link we produced.
+  if (!/^[0-9a-z]{1,13}$/.test(token)) return null;
+  let value = 0n;
+  for (const ch of token) {
+    const digit = parseInt(ch, 36);
+    if (Number.isNaN(digit)) return null;
+    value = value * 36n + BigInt(digit);
+  }
+  return value & MASK;
+}
+
+/**
+ * Seed for the noise bed, derived from the sound's own seed.
+ *
+ * Previously this was the visit index, which meant the same genome rendered a different bed
+ * depending on how many sounds you had generated first — so a shared link could not reproduce what
+ * the sender actually heard.
+ */
+export function renderSeedFor(seed: bigint): number {
   return Number(seed % 100000n);
 }
 

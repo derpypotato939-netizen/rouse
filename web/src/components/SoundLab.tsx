@@ -4,9 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   NOVELTY_THRESHOLD,
   describeGenome,
+  distance,
+  renderSeedFor,
   sampleGenome,
   seedHash,
+  seedToToken,
   serialFor,
+  tokenToSeed,
   type Genome,
 } from "@/lib/engine";
 import { peaks, render, toAudioBuffer, toWav, type StereoBuffer } from "@/lib/synth";
@@ -29,6 +33,8 @@ const WAVEFORM_BINS = 220;
 type Sound = {
   genome: Genome;
   buffer: StereoBuffer;
+  /** Kept so the share link can carry something that actually reproduces this sound. */
+  seed: bigint;
   serial: number;
   family: string;
   bins: number[];
@@ -108,34 +114,80 @@ export default function SoundLab() {
     []
   );
 
+  /**
+   * Build and play the sound for a specific seed.
+   *
+   * Seed-driven rather than index-driven so a shared link reproduces exactly what the sender heard.
+   * `autoplay` is false when restoring from a URL: browsers block audio that no one asked for, and
+   * a page that makes noise on arrival is worse than one that waits to be asked.
+   */
+  const generateFrom = useCallback(
+    (seed: bigint, autoplay = true) => {
+      setGenerating(true);
+      stop();
+
+      // Yield a frame so the "generating" state paints before the synchronous render blocks.
+      setTimeout(() => {
+        // Sampled against an EMPTY history on purpose, so a genome is a pure function of its seed.
+        //
+        // Passing the session history here made the draw depend on what you had already heard —
+        // which meant a recipient arriving from a link, with no history, could resolve the same
+        // seed to a different sound. Measured at roughly 1 in 12 shared links delivering the wrong
+        // audio (tools/verify-share.mjs). The novelty-vs-history machinery still matters in the
+        // iOS app, where seeds are date-derived and can land close together; here seeds are random,
+        // so collisions are already vanishingly unlikely.
+        const draw = sampleGenome(seed, []);
+        const buffer = render(draw.genome, STINGER_SECONDS, renderSeedFor(seed));
+
+        // Distance is still computed against the session, purely so the page can say how far this
+        // sound sits from the last few. It no longer influences which sound you get.
+        const nearest = historyRef.current.length
+          ? Math.min(...historyRef.current.map((h) => distance(draw.genome, h)))
+          : Infinity;
+
+        const next: Sound = {
+          genome: draw.genome,
+          buffer,
+          seed,
+          serial: serialFor(seed),
+          family: describeGenome(draw.genome),
+          bins: peaks(buffer, WAVEFORM_BINS),
+          novelty: nearest,
+        };
+
+        historyRef.current = [draw.genome, ...historyRef.current];
+        statsRef.current.sounds = historyRef.current.length;
+        setCount(historyRef.current.length);
+        setSound(next);
+        setGenerating(false);
+        if (autoplay) play(next, fromStart ? 0 : SKIP_RAMP_TO);
+      }, 20);
+    },
+    [fromStart, play, stop]
+  );
+
   const generate = useCallback(() => {
-    setGenerating(true);
-    stop();
+    const nth = historyRef.current.length + 1;
+    generateFrom(seedHash(`lab|${startedAtRef.current ?? 0}|${nth}|${Math.random()}`));
+  }, [generateFrom]);
 
-    // Yield a frame so the "generating" state paints before the synchronous render blocks.
-    setTimeout(() => {
-      const nth = historyRef.current.length + 1;
-      const seed = seedHash(`lab|${startedAtRef.current ?? 0}|${nth}|${Math.random()}`);
-      const draw = sampleGenome(seed, historyRef.current);
-      const buffer = render(draw.genome, STINGER_SECONDS, nth);
-
-      const next: Sound = {
-        genome: draw.genome,
-        buffer,
-        serial: serialFor(seed),
-        family: describeGenome(draw.genome),
-        bins: peaks(buffer, WAVEFORM_BINS),
-        novelty: draw.nearestDistance,
-      };
-
-      historyRef.current = [draw.genome, ...historyRef.current];
-      statsRef.current.sounds = historyRef.current.length;
-      setCount(historyRef.current.length);
-      setSound(next);
-      setGenerating(false);
-      play(next, fromStart ? 0 : SKIP_RAMP_TO);
-    }, 20);
-  }, [fromStart, play, stop]);
+  // Restore a shared sound. Runs once; a bad or absent token simply leaves the page in its normal
+  // "press the button" state rather than erroring at someone who followed a link.
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    const token = new URLSearchParams(window.location.search).get("s");
+    if (!token) return;
+    const seed = tokenToSeed(token);
+    if (seed === null) return;
+    // Deferred out of the effect body: `generateFrom` sets state immediately, and doing that
+    // synchronously inside an effect triggers a cascading render. Restoring a shared sound is
+    // asynchronous work anyway — it renders 29 seconds of audio — so a task boundary is honest here,
+    // not a workaround.
+    const task = setTimeout(() => generateFrom(seed, false), 0);
+    return () => clearTimeout(task);
+  }, [generateFrom]);
 
   const download = useCallback(() => {
     if (!sound) return;
@@ -157,7 +209,8 @@ export default function SoundLab() {
   const share = useCallback(async () => {
     if (!sound) return;
     const serial = String(sound.serial).padStart(5, "0");
-    const url = `${window.location.origin}?s=${serial}`;
+    // The token, not the serial: `serialFor` is lossy and cannot rebuild the sound.
+    const url = `${window.location.origin}?s=${seedToToken(sound.seed)}`;
     const text = `Rouse sound #${serial} — an alarm tone that has never existed before and will never repeat.`;
 
     try {
