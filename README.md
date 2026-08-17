@@ -2,33 +2,25 @@
 
 **The alarm your brain can't learn.**
 
-Every morning Rouse generates a wake-up that has never happened before — the sound, the challenge
-that dismisses it, and when it checks back on you. Then it measures how awake you actually got and
-uses that to shape tomorrow.
+An alarm sound that has never existed before and will never repeat. Some of them are rare.
 
-## Why it works
+## The idea
 
-Your brain habituates to anything repeated. The same tone every morning produces a weaker response
-over time — which is why the alarm that used to wake you stops working.
+Every morning, a sound that has never existed. You will never hear the same alarm twice.
 
-But so does the same *task*. Every mission-style alarm app solves "dismiss the alarm" and stops
-there, and users are blunt about what happens next: *"I woke up to the alarm, got out of bed,
-scanned the 3 QR codes set around the house to dismiss the alarm then went right back to sleep."*
-A half-asleep brain automates any fixed obstacle.
+Some are rare. A sound earns its tier from the unusual things it actually does — piercing,
+breakneck, cavernous — so a Legendary (about 1 in 78) genuinely sounds like one. Rarity is never
+purchasable and never affects how hard the alarm wakes you; see the four rules in `AGENTS.md`.
 
-So Rouse randomises the whole protocol, and doesn't stop until you've proven you're awake.
+Underneath, the same idea runs deeper: your brain habituates to a repeated *task* just as it does to
+a repeated tone, which is why every mission-style alarm gets solved on autopilot. So Rouse
+randomises the whole wake-up and keeps checking until you've actually stayed up.
 
-Random must not mean jarring, though. Melodic waking sounds are linked to less morning grogginess
-than harsh ones (McFarlane et al., 2020), so sound is drawn from a melodic space behind safety rails
-that forbid dissonant openings and enforce a gradual loudness ramp. Challenges are capped for
-difficulty and optimised for *autopilot resistance* instead — a different axis, and the one that
-matters.
+Random must not mean jarring. Every sound is drawn from a melodic space behind fixed rules — no
+dissonant opening interval, always a gradual eight-second fade-in, because being blasted awake at
+full volume feels awful and leaves you groggier.
 
-Built for people whose brains habituate fastest: the ADHD/DSPD audience, where roughly 75% also
-have trouble with sleep timing. Named as the audience, never as something Rouse treats.
-
-Claims are tracked in [`docs/SCIENCE.md`](docs/SCIENCE.md). Anything not in that ledger does not
-get said.
+[`docs/SCIENCE.md`](docs/SCIENCE.md) is not marketing — it is the line the copy must not cross.
 
 ## Architecture
 
@@ -82,6 +74,12 @@ Validate the tuning constants without Xcode:
 node tools/validate.mjs
 ```
 
+Verify the published rarity odds are the real ones:
+
+```bash
+node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tools/verify-rarity.mjs
+```
+
 Verify share links still reproduce the exact sound they name:
 
 ```bash
@@ -100,7 +98,7 @@ node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON t
 |---|---|
 | [`docs/DEPLOY.md`](docs/DEPLOY.md) | The six steps to get this live. Start here. |
 | [`docs/OPERATIONS.md`](docs/OPERATIONS.md) | What costs money, and when to start paying it |
-| [`docs/SCIENCE.md`](docs/SCIENCE.md) | Claims ledger — every public claim, sourced |
+| [`docs/SCIENCE.md`](docs/SCIENCE.md) | Not marketing — the line the copy must not cross |
 | [`docs/TOOLCHAIN.md`](docs/TOOLCHAIN.md) | Why Swift doesn't compile here yet |
 | [`content/lane-a-scripts.md`](content/lane-a-scripts.md) | First ten content scripts |
 | [`content/advocate-brief.md`](content/advocate-brief.md) | Send to anyone posting about Rouse |

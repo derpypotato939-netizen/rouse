@@ -24,57 +24,44 @@ export default function Home() {
         <h1 className="mt-4 max-w-[18ch] text-4xl leading-[1.08] sm:text-6xl">
           The alarm your brain can&rsquo;t learn.
         </h1>
-        <p className="mt-6 max-w-[58ch] text-lg text-[var(--ink-muted)]">
-          Your brain habituates to a repeated alarm — the tone that used to wake you stops working.
-          Press the button and hear a sound that has never existed before.
+        <p className="mt-6 max-w-[54ch] text-lg text-[var(--ink-muted)]">
+          Every morning it makes you a sound that has never existed. You will never hear the same
+          alarm twice. Press the button — this one is yours.
         </p>
 
         <div className="mt-10">
           <SoundLab />
         </div>
 
-        {/* ---- The argument ---------------------------------------------------------------- */}
-        <section className="mt-20 grid gap-10 sm:grid-cols-2">
+        {/* ---- Three short answers to the three questions people actually have ---- */}
+        <section className="mt-20 grid gap-10 sm:grid-cols-3">
           <div>
-            <h2 className="text-xl font-medium">Novelty is the mechanism</h2>
+            <h2 className="text-xl font-medium">Never the same twice</h2>
             <p className="mt-3 text-[var(--ink-muted)]">
-              Habituation is a reduced response to a repeated stimulus — your brain learns the sound
-              is not a threat and stops reacting. Novel sounds keep their alerting power because
-              there is nothing yet to habituate to.
+              Not a shuffle through a library of ten tones. Each one is built from scratch, the
+              moment you ask for it, and then it is gone.
             </p>
           </div>
           <div>
-            <h2 className="text-xl font-medium">Random, but never jarring</h2>
+            <h2 className="text-xl font-medium">Some are rare</h2>
             <p className="mt-3 text-[var(--ink-muted)]">
-              Melodic waking sounds are linked to less morning grogginess than harsh ones, so every
-              sound is drawn from a melodic space behind fixed rules: no dissonant opening interval,
-              and always a gradual fade-in.
+              A sound gets a rarity from the unusual things it actually does — piercing, breakneck,
+              cavernous. Legendary turns up about once in eighty. You will know when you get one.
             </p>
           </div>
           <div>
-            <h2 className="text-xl font-medium">The sound is the easy half</h2>
+            <h2 className="text-xl font-medium">It fades in</h2>
             <p className="mt-3 text-[var(--ink-muted)]">
-              A fixed <em>task</em> habituates just like a fixed tone. People solve the puzzle, scan
-              the code, and go straight back to bed. So Rouse randomises the whole wake-up — and
-              keeps checking, at times you can&rsquo;t predict, until you&rsquo;ve actually stayed
-              up.
-            </p>
-          </div>
-          <div>
-            <h2 className="text-xl font-medium">Built to be checked</h2>
-            <p className="mt-3 text-[var(--ink-muted)]">
-              Most sleep apps cite nothing. Every claim Rouse makes is written down with its source,
-              including the ones where the evidence is thin — and what it deliberately refuses to
-              claim.
+              Every sound starts near silent and climbs over eight seconds. Being blasted awake at
+              full volume feels awful and you stay groggy longer. This one arrives.
             </p>
           </div>
         </section>
 
         <footer className="mt-20 border-t border-[var(--border)] pt-8 text-sm text-[var(--ink-muted)]">
           <p>
-            Rouse is a wellness tool, not a medical device. It does not diagnose or treat any
-            condition. If you are persistently unable to wake or stay awake, that is worth raising
-            with a doctor.
+            Rouse is a wellness tool, not a medical device. If you are persistently unable to wake
+            or stay awake, that is worth raising with a doctor.
           </p>
           <p className="mt-4">
             Built by Jasper ·{" "}
@@ -86,7 +73,7 @@ export default function Home() {
               href="https://github.com/derpypotato939-netizen/rouse/blob/main/docs/SCIENCE.md"
               className="underline underline-offset-4 hover:text-[var(--accent)]"
             >
-              Claims ledger
+              What we do and don’t claim
             </a>
           </p>
         </footer>

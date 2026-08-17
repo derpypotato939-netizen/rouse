@@ -6,12 +6,14 @@ import {
   describeGenome,
   distance,
   renderSeedFor,
+  rarityFor,
   sampleGenome,
   seedHash,
   seedToToken,
   serialFor,
   tokenToSeed,
   type Genome,
+  type RarityResult,
 } from "@/lib/engine";
 import { peaks, render, toAudioBuffer, toWav, type StereoBuffer } from "@/lib/synth";
 
@@ -30,6 +32,18 @@ const SKIP_RAMP_TO = 6.5;
 
 const WAVEFORM_BINS = 220;
 
+/**
+ * Tier colours. Legendary is the only one that gets the brand accent — if every tier glows, none of
+ * them mean anything.
+ */
+const TIER_COLOR: Record<string, string> = {
+  Common: "#8b93a5",
+  Uncommon: "#7fb894",
+  Rare: "#4fd1c5",
+  Epic: "#b98ad4",
+  Legendary: "#ff7a45",
+};
+
 type Sound = {
   genome: Genome;
   buffer: StereoBuffer;
@@ -37,6 +51,7 @@ type Sound = {
   seed: bigint;
   serial: number;
   family: string;
+  rarity: RarityResult;
   bins: number[];
   novelty: number;
 };
@@ -153,6 +168,7 @@ export default function SoundLab() {
           seed,
           serial: serialFor(seed),
           family: describeGenome(draw.genome),
+          rarity: rarityFor(draw.genome),
           bins: peaks(buffer, WAVEFORM_BINS),
           novelty: nearest,
         };
@@ -217,7 +233,10 @@ export default function SoundLab() {
     const serial = String(sound.serial).padStart(5, "0");
     // The token, not the serial: `serialFor` is lossy and cannot rebuild the sound.
     const url = `${window.location.origin}?s=${seedToToken(sound.seed)}`;
-    const text = `Rouse sound #${serial} — an alarm tone that has never existed before and will never repeat.`;
+    const rare = sound.rarity.tier !== "Common" && sound.rarity.tier !== "Uncommon";
+    const text = rare
+      ? `I pulled a ${sound.rarity.tier} alarm — Rouse sound #${serial}. ${sound.rarity.traits.join(", ")}.`
+      : `Rouse sound #${serial} — an alarm tone that has never existed before and will never repeat.`;
 
     try {
       if (navigator.share) {
@@ -281,9 +300,18 @@ export default function SoundLab() {
               </div>
               <div className="text-right">
                 <div className="text-xs uppercase tracking-[0.18em] text-[var(--ink-muted)]">
-                  Character
+                  {sound.family}
                 </div>
-                <div className="text-lg">{sound.family}</div>
+                <div
+                  className="mt-1 inline-block rounded-full border px-3 py-1 text-sm font-medium"
+                  style={{
+                    color: TIER_COLOR[sound.rarity.tier],
+                    borderColor: TIER_COLOR[sound.rarity.tier],
+                    background: `color-mix(in srgb, ${TIER_COLOR[sound.rarity.tier]} 12%, transparent)`,
+                  }}
+                >
+                  {sound.rarity.tier}
+                </div>
               </div>
             </div>
 
@@ -292,6 +320,19 @@ export default function SoundLab() {
                 Someone shared this sound with you. It has only ever existed for them — press play,
                 then make one of your own.
               </p>
+            )}
+
+            {sound.rarity.traits.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {sound.rarity.traits.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--ink-muted)]"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
             )}
 
             <Waveform bins={sound.bins} playing={playing} />

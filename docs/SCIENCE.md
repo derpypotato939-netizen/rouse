@@ -1,7 +1,9 @@
 # Claims ledger
 
-Every public claim Rouse makes — App Store copy, the website, a TikTok caption — must appear in
-this table before it ships. FTC substantiation standards require competent and reliable scientific
+**This is not marketing.** The positioning is gimmick-first — a sound that has never existed, some
+of them rare — and the science never leads. This file exists for one reason: it is the line the copy
+must not cross. Every public claim Rouse makes — App Store copy, the website, a TikTok caption —
+must appear in this table before it ships. FTC substantiation standards require competent and reliable scientific
 evidence for each *specific* claim, and App Store review flags unsubstantiated wellness claims.
 This file is the paper trail.
 
@@ -20,24 +22,13 @@ real citation, or change the sentence.
 | "Biofeedback." | Defensible **only** because Stage 3 measures a physiological/behavioural response and feeds it back to the user and into the sound selection. | **Conditional.** If measurement is ever removed from a build, this word must come out of the copy in the same release. |
 | "Sleep inertia can last well past the few minutes most alarms assume." | Roughly 2–15 min waking from light sleep, 30–90 min from deep N3, and up to ~4 hours in severe "sleep drunkenness." This is what sizes the verification ladder's window. | **Strong**, with wide individual variation. Give the range, never a single number as if it applied to the reader. |
 | "People complete wake-up challenges on autopilot and go back to sleep." | Directly reported by users of competing apps — e.g. scanning three QR codes around the house to dismiss an alarm, then returning to bed. | **User-reported, not a study.** Present it as what people say, which is all it is. Do not dress it up as a finding. |
-| "Most people with ADHD also have trouble with sleep timing." | ADHD co-occurs with delayed sleep-wake phase disorder at high rates; DSWPD is the most frequent circadian disorder seen in ADHD populations. | **Moderate–strong.** Say "commonly co-occurs." Never imply a causal direction, and never imply Rouse addresses ADHD itself. |
 
-## The ADHD/DSPD wedge — additional rules
+## Audience
 
-ADHD and DSPD are named as **who Rouse is built for**, never as something it treats. That line is
-not negotiable: a treatment claim would make this a regulated medical device.
-
-Two further constraints, both from how this specific community has been treated by app marketing:
-
-- **Never guilt.** No "lazy", "undisciplined", "just try harder", no before/after morality. The
-  documented complaint about ADHD marketing is exactly this framing — associating the condition
-  with character failure to sell a fix. Rouse's frame is mechanical: *your brain habituates
-  faster, so here is a tool that stops being predictable.*
-- **Cite or don't say it.** A 2022 analysis found ~85% of mental-health content on TikTok
-  misleading and **100% of ADHD content misleading**, with under 10% of creators holding relevant
-  qualifications. Against that backdrop, an uncited claim is not a small shortcut — it is
-  indistinguishable from the grift the audience is already tired of. Every content piece cites its
-  source on screen.
+Rouse is for anyone who struggles to wake up. **Do not target ADHD or any clinical group in
+marketing.** Two reasons: naming a condition edges toward a treatment claim, and pairing
+variable-reward pull mechanics with a community that is specifically alert to that pattern reads as
+exploitative. The audience is still reachable without being aimed at.
 
 ## Claims we do NOT make
 
@@ -49,7 +40,8 @@ Two further constraints, both from how this specific community has been treated 
 | "Treats/cures insomnia, sleep apnea, delayed sleep phase" | A treatment claim makes the app a regulated medical device. Rouse is a wellness product. |
 | "Reduces sleep inertia by N%" | We have no data supporting a specific figure. Once we do have aggregate data, it may be reported as *our observed data*, clearly labelled, never as an established finding. |
 | Any claim about children, shift-worker safety, or driving alertness | Higher-stakes populations demand evidence we do not have. |
-| "Helps/manages/is designed for ADHD symptoms" | Naming ADHD as the audience is fine. Claiming any effect *on* ADHD is a treatment claim. |
+| That rarity can be bought, improved, or grinded for | It cannot, and implying it turns the mechanic into a loot box — with the EU/China regulatory attention that carries. |
+| Anything naming ADHD, autism, or any clinical group | Not the audience we target, and one step from a treatment claim. |
 | "Guaranteed to wake you up" | No alarm can promise this, and the category's own reviews are full of users it failed. |
 
 ## When we start reporting our own data
@@ -72,11 +64,9 @@ It cannot support *"novel sounds improve alertness by X%"* as a general claim.
 - Tomkins, Liao, Klasnja, Murphy (2020). *IntelligentPooling: Practical Thompson Sampling for
   mHealth.* arXiv:2008.01571 — the pooling approach used in `Bandit.swift`.
   https://arxiv.org/pdf/2008.01571
-- ADDitude. *Late Nights, Later Days: The Under-Recognized Impact of Delayed Sleep Phase Syndrome in
-  ADHD.* https://www.additudemag.com/delayed-sleep-phase-syndrome-signs-treatments-adhd/
 - Understood. *The ADHD content economy: how algorithms and incentives turn help into grift* —
-  the source of the "never guilt" rule.
-  https://www.understood.org/en/podcasts/hyperfocus/adhd-scam
+  retained as the source of the "never guilt-frame" tone rule, though ADHD is no longer a targeted
+  audience. https://www.understood.org/en/podcasts/hyperfocus/adhd-scam
 - Sleep as Android feature forum, *Wake up check* — the primary user testimony that mission-style
   alarms are defeated on autopilot. https://forum.urbandroid.org/t/wake-up-check/233
 - US Patent 4,060,973, *Automatic variable-sound alarm clock* (1977) — prior art establishing that

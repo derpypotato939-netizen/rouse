@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: "Rouse — the alarm your brain can't learn",
   description:
-    "Your brain habituates to a repeated alarm, and to a repeated task. Rouse generates a wake-up that has never happened before — then checks that you actually stayed awake.",
+    "An alarm sound that has never existed before and will never repeat. Some are rare. Generate one in your browser.",
   openGraph: {
     title: "Rouse — the alarm your brain can't learn",
     description:

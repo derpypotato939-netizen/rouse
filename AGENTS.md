@@ -1,6 +1,31 @@
 # Working in this repo
 
-## The one rule that matters
+## Positioning: gimmick first
+
+The front door is **the gimmick, never the science**: a sound that has never existed before, some of
+them rare. Nobody downloads an alarm because of a citation. The research-forward framing was tried
+and dropped.
+
+`docs/SCIENCE.md` survives, but it is **not marketing any more** — it is the line the copy must not
+cross. It stays silent and keeps claims honest.
+
+**The audience is broad.** Do not target ADHD or any clinical group; see `docs/SCIENCE.md`.
+
+### The rarity mechanic has four hard rules
+
+1. **No pull farming in the app.** One alarm, one sound. (The web Lab is exempt — unlimited
+   generation is the demo.)
+2. **No completion pressure.** No "23 of 24 collected", no nudges to set odd alarm times.
+3. **Rarity never affects the alarm.** A Common wakes you exactly as hard as a Legendary.
+4. **Rarity is never purchasable.** Paying buys quantity and features, never odds.
+
+If a user ever opens Rouse to *collect* rather than to *wake up*, the design has failed. An alarm
+that feels like a game is an alarm you stop trusting at 6am.
+
+Rarity is derived from **audible traits**, not statistics — see the comment on `rarityFor` in
+`web/src/lib/engine.ts` for why distance-from-mean was measured and rejected.
+
+## Claims
 
 **Every public claim goes through `docs/SCIENCE.md` first.** If you write marketing copy, App Store
 text, or website prose that asserts something about sleep, brains, or alertness, it must trace to a
@@ -11,9 +36,10 @@ Specifically banned, everywhere: "clinically proven", "brainwave entrainment", "
 "wakes you during light sleep" (technically impossible on iPhone — Apple exposes no real-time
 sleep-stage API), and any numeric claim like "reduces sleep inertia by 40%".
 
-Two rules specific to the ADHD/DSPD audience, both hard: **never guilt-frame** (no "lazy",
-"undisciplined", no character-failure framing), and **never claim any effect on ADHD itself** —
-naming the audience is fine, treating it is a medical-device claim. Details in `docs/SCIENCE.md`.
+One tone rule survives from the earlier positioning and still matters: **never guilt-frame.** No
+"lazy", no "undisciplined", no character-failure framing. A large part of the audience physically
+struggles to wake up, and that framing tells them it is a personality defect. It is not, and they
+will correctly read the brand as not for them.
 
 ## Architecture
 

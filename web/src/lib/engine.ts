@@ -440,3 +440,84 @@ export function describeGenome(g: Genome): string {
   );
   return family?.displayName ?? `${g.contour}, ${Math.round(g.bpm)} BPM`;
 }
+
+// MARK: - Rarity
+
+/**
+ * Rarity, derived from traits you can actually hear.
+ *
+ * ## Why not distance-from-mean
+ *
+ * The obvious approach — how far this genome sits from the population average in feature space —
+ * was measured and rejected. Across 100,000 samples the distance ranged only 1.47 to 2.14, with the
+ * 55th and 99th percentiles just 0.23 apart. That is distance concentration: in 45 dimensions almost
+ * everything is roughly equidistant from the mean. A "Legendary" would have been statistically
+ * distinguishable and audibly identical to a Common — and since these sounds are *played out loud*,
+ * users would have caught that in about four pulls and stopped believing anything else on the page.
+ *
+ * ## What this does instead
+ *
+ * Counts how many independently unusual characteristics a sound has, each one something a listener
+ * could point at. Rarity is then genuinely rare (traits are near-independent, so the probabilities
+ * multiply) *and* genuinely audible (four unusual traits at once sounds unusual).
+ *
+ * Measured incidence over 100,000 samples — see `tools/validate.mjs`, which asserts these hold:
+ *
+ *   Common 30% · Uncommon 40% · Rare 22% · Epic 6.6% (1 in 15) · Legendary 1.2% (1 in 85)
+ */
+export type Rarity = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary";
+
+export const RARITY_ORDER: Rarity[] = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
+
+/** A named, audible peculiarity. `label` is user-facing and deliberately evocative. */
+interface Trait {
+  test: (g: Genome) => boolean;
+  label: (g: Genome) => string;
+}
+
+function popcountOf(n: number): number {
+  let c = 0;
+  let v = n;
+  while (v) { c += v & 1; v >>= 1; }
+  return c;
+}
+
+const TRAITS: Trait[] = [
+  {
+    test: (g) => spectralCentroid(g) > 1100 || spectralCentroid(g) < 380,
+    label: (g) => (spectralCentroid(g) > 1100 ? "piercing" : "subterranean"),
+  },
+  {
+    test: (g) => g.bpm > 112 || g.bpm < 62,
+    label: (g) => (g.bpm > 112 ? "breakneck" : "glacial"),
+  },
+  { test: (g) => g.accel > 19, label: () => "accelerating" },
+  { test: (g) => g.decay > 2.4, label: () => "endless tail" },
+  {
+    test: (g) => Math.abs(g.sweepEnd - g.sweepStart) > 6200,
+    label: (g) => (g.sweepEnd > g.sweepStart ? "opening up" : "closing down"),
+  },
+  {
+    test: (g) => popcountOf(g.subdivision) > 10 || popcountOf(g.subdivision) <= 2,
+    label: (g) => (popcountOf(g.subdivision) > 10 ? "frantic" : "skeletal"),
+  },
+  { test: (g) => g.space > 0.82, label: () => "cavernous" },
+];
+
+export interface RarityResult {
+  tier: Rarity;
+  /** The unusual traits this sound actually has. Shown to the user, because a tier that can't
+   *  justify itself is a tier nobody believes. */
+  traits: string[];
+}
+
+export function rarityFor(g: Genome): RarityResult {
+  const traits = TRAITS.filter((t) => t.test(g)).map((t) => t.label(g));
+  const tier: Rarity =
+    traits.length >= 4 ? "Legendary"
+    : traits.length === 3 ? "Epic"
+    : traits.length === 2 ? "Rare"
+    : traits.length === 1 ? "Uncommon"
+    : "Common";
+  return { tier, traits };
+}
