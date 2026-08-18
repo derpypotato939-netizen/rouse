@@ -773,3 +773,72 @@ final class VerificationLadderTests: XCTestCase {
         XCTAssertTrue(VerificationLadder.violatesInvariants(softening))
     }
 }
+
+// MARK: - Rarity
+
+final class RarityTests: XCTestCase {
+
+    /// The published odds are a promise users test simply by using the app. If the stated and actual
+    /// rates diverge, it is a lie detectable by playing — and the damage lands on everything else
+    /// the product says.
+    func testDistributionMatchesThePublishedOdds() {
+        var counts: [Rarity: Int] = [:]
+        let total = 100_000
+
+        for seed in 0..<total {
+            let genome = GenomeSampler.sample(seed: UInt64(seed)).genome
+            counts[genome.rarity.tier, default: 0] += 1
+        }
+
+        func share(_ tier: Rarity) -> Double { Double(counts[tier] ?? 0) / Double(total) * 100 }
+
+        // Ranges match `tools/verify-rarity.mjs`. Both engines must agree, so both are asserted.
+        XCTAssertTrue((26...34).contains(share(.common)), "Common \(share(.common))%")
+        XCTAssertTrue((36...44).contains(share(.uncommon)), "Uncommon \(share(.uncommon))%")
+        XCTAssertTrue((19...26).contains(share(.rare)), "Rare \(share(.rare))%")
+        XCTAssertTrue((5.0...8.5).contains(share(.epic)), "Epic \(share(.epic))%")
+        XCTAssertTrue((0.7...1.8).contains(share(.legendary)), "Legendary \(share(.legendary))%")
+    }
+
+    /// A tier that cannot say why it is that tier is a tier nobody believes — and these sounds are
+    /// audible enough that an unjustified claim gets caught immediately.
+    func testEveryTierAboveCommonNamesItsTraits() {
+        for seed in 0..<20_000 {
+            let result = GenomeSampler.sample(seed: UInt64(seed)).genome.rarity
+            if result.tier != .common {
+                XCTAssertFalse(result.traits.isEmpty, "seed \(seed) claimed \(result.tier) with no traits")
+            } else {
+                XCTAssertTrue(result.traits.isEmpty, "seed \(seed) is Common but listed traits")
+            }
+        }
+    }
+
+    /// Tier is a pure function of the genome, which is what lets a shared link carry it.
+    func testRarityIsDeterministic() {
+        for seed in 0..<2_000 {
+            let a = GenomeSampler.sample(seed: UInt64(seed)).genome.rarity
+            let b = GenomeSampler.sample(seed: UInt64(seed)).genome.rarity
+            XCTAssertEqual(a.tier, b.tier)
+            XCTAssertEqual(a.traits, b.traits)
+        }
+    }
+
+    func testTraitCountMapsToTier() {
+        for seed in 0..<20_000 {
+            let r = GenomeSampler.sample(seed: UInt64(seed)).genome.rarity
+            let expected: Rarity = r.traits.count >= 4 ? .legendary
+                                 : r.traits.count == 3 ? .epic
+                                 : r.traits.count == 2 ? .rare
+                                 : r.traits.count == 1 ? .uncommon
+                                 : .common
+            XCTAssertEqual(r.tier, expected)
+        }
+    }
+
+    func testTiersOrderCorrectly() {
+        XCTAssertTrue(Rarity.common < Rarity.uncommon)
+        XCTAssertTrue(Rarity.uncommon < Rarity.rare)
+        XCTAssertTrue(Rarity.rare < Rarity.epic)
+        XCTAssertTrue(Rarity.epic < Rarity.legendary)
+    }
+}

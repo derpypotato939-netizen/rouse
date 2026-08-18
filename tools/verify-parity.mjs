@@ -32,6 +32,18 @@ const check = (name, ok, detail = "") => {
 /** Every distinct number in a source, so a changed threshold on either side shows up. */
 const numbers = (src) => new Set((src.match(/-?\d+\.?\d*/g) ?? []).map(Number));
 
+/** Strip comments, so prose about the numbers isn't mistaken for the numbers. */
+const code = (src) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+/** Numbers with their occurrence counts — catches a threshold changed in one place but not another. */
+function numberCounts(src) {
+  const counts = new Map();
+  for (const n of (code(src).match(/-?\d+\.?\d*/g) ?? []).map(Number)) {
+    counts.set(n, (counts.get(n) ?? 0) + 1);
+  }
+  return counts;
+}
+
 console.log("\n=== Rarity thresholds match across engines ===");
 {
   // These are the numbers that decide what tier a sound gets. If one engine drifts, a Legendary on
@@ -43,6 +55,28 @@ console.log("\n=== Rarity thresholds match across engines ===");
   const missingSw = RARITY_THRESHOLDS.filter((n) => !swNums.has(n));
   check("TypeScript has every rarity threshold", missingTs.length === 0, missingTs.join(", "));
   check("Swift has every rarity threshold", missingSw.length === 0, missingSw.join(", "));
+}
+
+console.log("\n=== Rarity numbers match exactly, not just approximately ===");
+{
+  // A stricter comparison than "does this number appear somewhere". Several thresholds appear twice
+  // — once to test the trait and once to pick which label it gets — and changing only one of them
+  // is a real bug: at bpm 110 the trait would fire but be labelled with the wrong branch. Comparing
+  // the full multiset of numbers in each rarity implementation catches that, and catches any
+  // addition or removal on either side without hardcoding what to look for.
+  const tsRarity = ts.slice(ts.indexOf("// MARK: - Rarity"));
+  const a = numberCounts(tsRarity);
+  const b = numberCounts(swiftRarity);
+
+  // Structural noise each language has and the other doesn't (case indices, array literals).
+  const IGNORE = new Set([0, 1, 2, 3, 4, 5, 6]);
+  const meaningful = (m) => [...m].filter(([n]) => !IGNORE.has(n)).sort((x, y) => x[0] - y[0]);
+
+  const aList = meaningful(a), bList = meaningful(b);
+  const fmt = (l) => l.map(([n, c]) => (c > 1 ? `${n}x${c}` : `${n}`)).join(" ");
+  const same = fmt(aList) === fmt(bList);
+  check("identical thresholds, identical multiplicity", same,
+        same ? fmt(aList) : `ts: ${fmt(aList)}\n            swift: ${fmt(bList)}`);
 }
 
 console.log("\n=== Trait vocabulary matches ===");

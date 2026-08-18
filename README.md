@@ -68,23 +68,15 @@ Audition the engine — writes one `.wav` per morning:
 swift run --package-path ios/RouseCore rouse-render --days 30 --out ./out --simulate-learning
 ```
 
-Validate the tuning constants without Xcode:
+**Run every check with one command:**
 
 ```bash
-node tools/validate.mjs
+node tools/check.mjs
 ```
 
-Verify the published rarity odds are the real ones:
-
-```bash
-node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tools/verify-rarity.mjs
-```
-
-Verify share links still reproduce the exact sound they name:
-
-```bash
-node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tools/verify-share.mjs
-```
+That covers the engine tuning, share links, rarity odds, Swift/TypeScript parity, and the web
+typecheck, lint and build — about 25 seconds. Each harness exists because it caught a real bug that
+reading the code did not.
 
 Batch-render sounds for content (no Xcode needed):
 

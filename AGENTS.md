@@ -80,6 +80,16 @@ any device, forever. The share card prints a sound's serial number, and that num
 Never introduce `SystemRandomNumberGenerator`, `Date()`, or dictionary iteration order into the
 sampling or synthesis path.
 
+## Before you commit
+
+```bash
+node tools/check.mjs
+```
+
+Everything, ~25s. `tools/verify-parity.mjs` is the one people forget matters: the Swift and
+TypeScript engines are the same generator written twice, and they have already drifted once — the
+web gained rarity tiers and the Swift did not, unnoticed. If you change one engine, change both.
+
 ## Tuning constants have been measured — don't nudge them by feel
 
 `GenomeSampler.noveltyThreshold`, the centroid rails, and the bandit priors were set from a
