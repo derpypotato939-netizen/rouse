@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  NOVELTY_THRESHOLD,
   describeGenome,
-  distance,
   renderSeedFor,
   rarityFor,
   sampleGenome,
@@ -32,6 +30,15 @@ const SKIP_RAMP_TO = 6.5;
 
 const WAVEFORM_BINS = 220;
 
+/** Measured over 100,000 sounds and asserted by tools/verify-rarity.mjs — not marketing numbers. */
+const ODDS: [string, string][] = [
+  ["Common", "30%"],
+  ["Uncommon", "40%"],
+  ["Rare", "22%"],
+  ["Epic", "1 in 15"],
+  ["Legendary", "1 in 78"],
+];
+
 /**
  * Tier colours. Legendary is the only one that gets the brand accent — if every tier glows, none of
  * them mean anything.
@@ -53,7 +60,6 @@ type Sound = {
   family: string;
   rarity: RarityResult;
   bins: number[];
-  novelty: number;
 };
 
 export default function SoundLab() {
@@ -156,12 +162,6 @@ export default function SoundLab() {
         const draw = sampleGenome(seed, []);
         const buffer = render(draw.genome, STINGER_SECONDS, renderSeedFor(seed));
 
-        // Distance is still computed against the session, purely so the page can say how far this
-        // sound sits from the last few. It no longer influences which sound you get.
-        const nearest = historyRef.current.length
-          ? Math.min(...historyRef.current.map((h) => distance(draw.genome, h)))
-          : Infinity;
-
         const next: Sound = {
           genome: draw.genome,
           buffer,
@@ -170,7 +170,6 @@ export default function SoundLab() {
           family: describeGenome(draw.genome),
           rarity: rarityFor(draw.genome),
           bins: peaks(buffer, WAVEFORM_BINS),
-          novelty: nearest,
         };
 
         historyRef.current = [draw.genome, ...historyRef.current];
@@ -376,16 +375,21 @@ export default function SoundLab() {
             </label>
 
             {count > 1 && (
-              <p className="mt-5 border-t border-[var(--border)] pt-5 text-sm text-[var(--ink-muted)]">
-                You&rsquo;ve heard <span className="text-[var(--ink)]">{count} sounds</span>. None of
-                them existed before you pressed the button, and none of them will ever occur again.
-                {/* Built as one string: JSX silently drops the space between an expression and
-                    the text that follows it, which produced "2.63away" on the first pass. */}
-                {sound.novelty !== Infinity &&
-                  ` This one sits ${sound.novelty.toFixed(2)} away from the nearest thing you’ve` +
-                    ` already heard — the engine refuses anything closer than` +
-                    ` ${NOVELTY_THRESHOLD.toFixed(2)}.`}
-              </p>
+              <div className="mt-5 border-t border-[var(--border)] pt-5">
+                <p className="text-sm text-[var(--ink-muted)]">
+                  You&rsquo;ve heard <span className="text-[var(--ink)]">{count} sounds</span>. None of
+                  them existed before you pressed the button, and none of them will ever occur again.
+                </p>
+                {/* The odds, published. Showing a tier without showing how rare it is invites the
+                    obvious suspicion that the tier is decorative — and it isn't. */}
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--ink-muted)]">
+                  {ODDS.map(([tier, odds]) => (
+                    <span key={tier}>
+                      <span style={{ color: TIER_COLOR[tier] }}>{tier}</span> {odds}
+                    </span>
+                  ))}
+                </div>
+              </div>
             )}
           </>
         ) : (

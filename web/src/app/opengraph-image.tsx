@@ -78,7 +78,7 @@ export default function Image() {
         </div>
 
         <div style={{ fontSize: 30, color: "#8b93a5", display: "flex", maxWidth: 980 }}>
-          Hear an alarm sound that has never existed before — generated in your browser.
+          An alarm that has never existed and will never repeat. Some are rare.
         </div>
       </div>
     ),
