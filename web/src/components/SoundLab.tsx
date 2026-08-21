@@ -51,6 +51,18 @@ const TIER_COLOR: Record<string, string> = {
   Legendary: "#ff7a45",
 };
 
+type WorkerResult = {
+  id: number;
+  left: Float32Array<ArrayBuffer>;
+  right: Float32Array<ArrayBuffer>;
+  sampleRate: number;
+  serial: number;
+  family: string;
+  rarity: RarityResult;
+  bins: number[];
+  genome: Genome;
+};
+
 type Sound = {
   genome: Genome;
   buffer: StereoBuffer;
@@ -79,6 +91,49 @@ export default function SoundLab() {
   const [needsConfirmation, setNeedsConfirmation] = useState(true);
   /** True when this sound arrived via a shared link rather than the visitor pressing generate. */
   const [fromLink, setFromLink] = useState(false);
+
+  /**
+   * Renders off the main thread. Synthesis is ~370ms on desktop and an estimated 1.5–3.5s on a
+   * phone; on the main thread that is a total freeze, and a frozen page reads as broken exactly
+   * when a first-time visitor is deciding whether to tap again.
+   *
+   * If the worker cannot be constructed for any reason, `workerRef` stays null and generation falls
+   * back to rendering inline — slower and janky, but never broken.
+   */
+  const workerRef = useRef<Worker | null>(null);
+  const pendingRef = useRef(new Map<number, (r: WorkerResult) => void>());
+  const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    let worker: Worker | null = null;
+    try {
+      // Relative path, not the "@/" alias: bundlers only emit a worker chunk when they can
+      // statically see a relative specifier here. The alias silently produced a 404 and fell back
+      // to main-thread rendering — which looked exactly like the worker "working".
+      worker = new Worker(new URL("../lib/render.worker.ts", import.meta.url));
+      worker.onmessage = (e: MessageEvent<WorkerResult>) => {
+        const resolve = pendingRef.current.get(e.data.id);
+        if (resolve) {
+          pendingRef.current.delete(e.data.id);
+          resolve(e.data);
+        }
+      };
+      worker.onerror = () => {
+        // Stop trying; every subsequent generate renders inline instead.
+        workerRef.current = null;
+      };
+      workerRef.current = worker;
+      // Warm it immediately. See the `warmup` note in render.worker.ts — without this the first
+      // generate costs ~3s and every one after costs ~350ms.
+      worker.postMessage({ id: 0, seed: "1", seconds: 0.25, bins: 16, warmup: true });
+    } catch {
+      workerRef.current = null;
+    }
+    return () => {
+      worker?.terminate();
+      workerRef.current = null;
+    };
+  }, []);
 
   const historyRef = useRef<Genome[]>([]);
   const contextRef = useRef<AudioContext | null>(null);
@@ -149,20 +204,44 @@ export default function SoundLab() {
       setGenerating(true);
       stop();
 
-      // Yield a frame so the "generating" state paints before the synchronous render blocks.
+      const finish = (next: Sound) => {
+        historyRef.current = [next.genome, ...historyRef.current];
+        statsRef.current.sounds = historyRef.current.length;
+        setCount(historyRef.current.length);
+        setSound(next);
+        setGenerating(false);
+        if (autoplay) play(next, fromStart ? 0 : SKIP_RAMP_TO);
+      };
+
+      const worker = workerRef.current;
+      if (worker) {
+        const id = ++requestIdRef.current;
+        pendingRef.current.set(id, (r) => {
+          finish({
+            genome: r.genome,
+            buffer: { left: r.left, right: r.right, sampleRate: r.sampleRate,
+                      duration: r.left.length / r.sampleRate },
+            seed,
+            serial: r.serial,
+            family: r.family,
+            rarity: r.rarity,
+            bins: r.bins,
+          });
+        });
+        worker.postMessage({ id, seed: seed.toString(), seconds: STINGER_SECONDS,
+                             bins: WAVEFORM_BINS });
+        return;
+      }
+
+      // Fallback: render inline. Yield a frame first so "Generating…" paints before the block.
       setTimeout(() => {
         // Sampled against an EMPTY history on purpose, so a genome is a pure function of its seed.
-        //
-        // Passing the session history here made the draw depend on what you had already heard —
-        // which meant a recipient arriving from a link, with no history, could resolve the same
-        // seed to a different sound. Measured at roughly 1 in 12 shared links delivering the wrong
-        // audio (tools/verify-share.mjs). The novelty-vs-history machinery still matters in the
-        // iOS app, where seeds are date-derived and can land close together; here seeds are random,
-        // so collisions are already vanishingly unlikely.
+        // Passing the session history made the draw depend on what you had already heard, which
+        // meant a recipient arriving from a link resolved the same seed to a different sound —
+        // measured at roughly 1 in 12 shared links delivering the wrong audio.
         const draw = sampleGenome(seed, []);
         const buffer = render(draw.genome, STINGER_SECONDS, renderSeedFor(seed));
-
-        const next: Sound = {
+        finish({
           genome: draw.genome,
           buffer,
           seed,
@@ -170,14 +249,7 @@ export default function SoundLab() {
           family: describeGenome(draw.genome),
           rarity: rarityFor(draw.genome),
           bins: peaks(buffer, WAVEFORM_BINS),
-        };
-
-        historyRef.current = [draw.genome, ...historyRef.current];
-        statsRef.current.sounds = historyRef.current.length;
-        setCount(historyRef.current.length);
-        setSound(next);
-        setGenerating(false);
-        if (autoplay) play(next, fromStart ? 0 : SKIP_RAMP_TO);
+        });
       }, 20);
     },
     [fromStart, play, stop]
